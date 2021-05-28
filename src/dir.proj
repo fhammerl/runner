@@ -1,33 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="14.0" DefaultTargets="Build" 
     xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-    <Target Name="GenerateConstant">
-        <Exec Command="git rev-parse HEAD" ConsoleToMSBuild="true">
-            <Output TaskParameter="ConsoleOutput" PropertyName="GitInfoCommitHash" />
-        </Exec>
-        <Message Text="Building $(Product): $(GitInfoCommitHash) --- $(PackageRuntime)" Importance="high"/>
-
-        <ItemGroup>
-            <BuildConstants Include="namespace GitHub.Runner.Sdk"/>
-            <BuildConstants Include="{"/>
-            <BuildConstants Include="%20%20%20%20public static class BuildConstants"/>
-            <BuildConstants Include="%20%20%20%20{"/>
-            <BuildConstants Include="%20%20%20%20%20%20%20%20public static class Source"/>
-            <BuildConstants Include="%20%20%20%20%20%20%20%20{"/>
-            <BuildConstants Include="%20%20%20%20%20%20%20%20%20%20%20%20public static readonly string CommitHash = %22$(GitInfoCommitHash)%22%3B"/>
-            <BuildConstants Include="%20%20%20%20%20%20%20%20}%0A"/>
-            <BuildConstants Include="%20%20%20%20%20%20%20%20public static class RunnerPackage"/>
-            <BuildConstants Include="%20%20%20%20%20%20%20%20{"/>
-            <BuildConstants Include="%20%20%20%20%20%20%20%20%20%20%20%20public static readonly string PackageName = %22$(PackageRuntime)%22%3B"/>
-            <BuildConstants Include="%20%20%20%20%20%20%20%20%20%20%20%20public static readonly string Version = %22$(RunnerVersion)%22%3B"/>
-            <BuildConstants Include="%20%20%20%20%20%20%20%20}"/>
-            <BuildConstants Include="%20%20%20%20}"/>
-            <BuildConstants Include="}"/>
-        </ItemGroup>
-
-        <WriteLinesToFile File="Runner.Sdk/BuildConstants.cs" Lines="@(BuildConstants)" Overwrite="true" />
-    </Target>
-
     <ItemGroup>
         <ProjectFiles Include="Sdk/Sdk.csproj" />
         <ProjectFiles Include="Runner.Common/Runner.Common.csproj" />

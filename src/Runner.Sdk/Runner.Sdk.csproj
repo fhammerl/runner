@@ -10,7 +10,44 @@
     <Version>$(Version)</Version>
     <TieredCompilationQuickJit>true</TieredCompilationQuickJit>
   </PropertyGroup>
-  
+
+  <Target Name="GenerateConstant" BeforeTargets="Build">
+    <Exec Command="git rev-parse HEAD" ConsoleToMSBuild="true">
+        <Output TaskParameter="ConsoleOutput" PropertyName="GitInfoCommitHash" />
+    </Exec>
+    <Exec Command="buildscripts/getRuntime.cmd" ConsoleToMSBuild="true" Condition=" '$(OS)' == 'Windows_NT' ">
+        <Output TaskParameter="ConsoleOutput" PropertyName="PackageRuntime" />
+    </Exec>
+    <Exec Command="buildscripts/getRuntime.sh" ConsoleToMSBuild="true" Condition=" '$(OS)' == 'UNIX' ">
+        <Output TaskParameter="ConsoleOutput" PropertyName="PackageRuntime" />
+    </Exec>
+    <Exec Command="buildscripts/getVersion.cmd" ConsoleToMSBuild="true" Condition=" '$(OS)' == 'Windows_NT' ">
+        <Output TaskParameter="ConsoleOutput" PropertyName="RunnerVersion" />
+    </Exec>
+    <Exec Command="buildscripts/getVersion.sh" ConsoleToMSBuild="true" Condition=" '$(OS)' == 'UNIX' ">
+        <Output TaskParameter="ConsoleOutput" PropertyName="RunnerVersion" />
+    </Exec>
+    <Message Text="Building $(Product): $(GitInfoCommitHash) --- $(PackageRuntime)" Importance="high"/>
+    <ItemGroup>
+        <BuildConstants Include="namespace GitHub.Runner.Sdk"/>
+        <BuildConstants Include="{"/>
+        <BuildConstants Include="%20%20%20%20public static class BuildConstants"/>
+        <BuildConstants Include="%20%20%20%20{"/>
+        <BuildConstants Include="%20%20%20%20%20%20%20%20public static class Source"/>
+        <BuildConstants Include="%20%20%20%20%20%20%20%20{"/>
+        <BuildConstants Include="%20%20%20%20%20%20%20%20%20%20%20%20public static readonly string CommitHash = %22$(GitInfoCommitHash)%22%3B"/>
+        <BuildConstants Include="%20%20%20%20%20%20%20%20}%0A"/>
+        <BuildConstants Include="%20%20%20%20%20%20%20%20public static class RunnerPackage"/>
+        <BuildConstants Include="%20%20%20%20%20%20%20%20{"/>
+        <BuildConstants Include="%20%20%20%20%20%20%20%20%20%20%20%20public static readonly string PackageName = %22$(PackageRuntime)%22%3B"/>
+        <BuildConstants Include="%20%20%20%20%20%20%20%20%20%20%20%20public static readonly string Version = %22$(RunnerVersion)%22%3B"/>
+        <BuildConstants Include="%20%20%20%20%20%20%20%20}"/>
+        <BuildConstants Include="%20%20%20%20}"/>
+        <BuildConstants Include="}"/>
+    </ItemGroup>
+    <WriteLinesToFile File="BuildConstants.cs" Lines="@(BuildConstants)" Overwrite="true" />
+</Target>
+
   <ItemGroup>
     <ProjectReference Include="..\Sdk\Sdk.csproj" />
   </ItemGroup>
