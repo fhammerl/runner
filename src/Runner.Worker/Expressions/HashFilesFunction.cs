@@ -25,11 +25,12 @@ namespace GitHub.Runner.Worker.Expressions
             ArgUtil.NotNull(githubContextData, nameof(githubContextData));
             var githubContext = githubContextData as DictionaryContextData;
             ArgUtil.NotNull(githubContext, nameof(githubContext));
-            githubContext.TryGetValue(PipelineTemplateConstants.Workspace, out var workspace);
-            var workspaceData = workspace as StringContextData;
-            ArgUtil.NotNull(workspaceData, nameof(workspaceData));
 
-            string githubWorkspace = workspaceData.Value;
+            githubContext.TryGetValue(PipelineTemplateConstants.WorkspaceHost, out var workspaceHost);            
+            ArgUtil.NotNull(workspaceHost, nameof(workspaceHost));
+            var workspaceHostData = workspaceHost as StringContextData;
+            var githubWorkspaceHost = workspaceHostData.Value; 
+            
             bool followSymlink = false;
             List<string> patterns = new List<string>();
             var firstParameter = true;
@@ -56,7 +57,7 @@ namespace GitHub.Runner.Worker.Expressions
                 patterns.Add(parameterString);
             }
 
-            context.Trace.Info($"Search root directory: '{githubWorkspace}'");
+            context.Trace.Info($"Search root directory: '{githubWorkspaceHost}'");
             context.Trace.Info($"Search pattern: '{string.Join(", ", patterns)}'");
 
             string binDir = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
@@ -95,7 +96,7 @@ namespace GitHub.Runner.Worker.Expressions
             {
                 try
                 {
-                    int exitCode = p.ExecuteAsync(workingDirectory: githubWorkspace,
+                    int exitCode = p.ExecuteAsync(workingDirectory: githubWorkspaceHost,
                                                   fileName: node,
                                                   arguments: $"\"{hashFilesScript.Replace("\"", "\\\"")}\"",
                                                   environment: env,
@@ -104,7 +105,7 @@ namespace GitHub.Runner.Worker.Expressions
 
                     if (exitCode != 0)
                     {
-                        throw new InvalidOperationException($"hashFiles('{ExpressionUtility.StringEscape(string.Join(", ", patterns))}') failed. Fail to hash files under directory '{githubWorkspace}'");
+                        throw new InvalidOperationException($"hashFiles('{ExpressionUtility.StringEscape(string.Join(", ", patterns))}') failed. Fail to hash files under directory '{githubWorkspaceHost}'");
                     }
                 }
                 catch (OperationCanceledException) when (tokenSource.IsCancellationRequested)

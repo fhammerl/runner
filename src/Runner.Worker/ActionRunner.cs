@@ -162,11 +162,18 @@ namespace GitHub.Runner.Worker
             var fileCommandManager = HostContext.CreateService<IFileCommandManager>();
             fileCommandManager.InitializeFiles(ExecutionContext, null);
 
+            //Shallow copy github context            
+            var gitHubContext = ExecutionContext.ExpressionValues["github"] as GitHubContext;
+            ArgUtil.NotNull(gitHubContext, nameof(gitHubContext));
+            gitHubContext = gitHubContext.ShallowCopy();
+            ExecutionContext.ExpressionValues["github"] = gitHubContext;
+            ExecutionContext.SetGitHubContext("workspace-host", ExecutionContext.GetGitHubContext("workspace"));
+            ExecutionContext.SetGitHubContext("workspace", stepHost.ResolvePathForStepHost(ExecutionContext.GetGitHubContext("workspace")));
+
             // Load the inputs.
             ExecutionContext.Debug("Loading inputs");
             var templateEvaluator = ExecutionContext.ToPipelineTemplateEvaluator();
             var inputs = templateEvaluator.EvaluateStepInputs(Action.Inputs, ExecutionContext.ExpressionValues, ExecutionContext.ExpressionFunctions);
-
             var userInputs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (KeyValuePair<string, string> input in inputs)
             {
