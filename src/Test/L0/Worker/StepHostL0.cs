@@ -26,6 +26,12 @@ namespace GitHub.Runner.Common.Tests.Worker
             _ec.Setup(x => x.Global).Returns(new GlobalContext { WriteDebug = true });
             var trace = hc.GetTrace();
             _ec.Setup(x => x.Write(It.IsAny<string>(), It.IsAny<string>())).Callback((string tag, string message) => { trace.Info($"[{tag}]{message}"); });
+            _ec.Object.Global.Variables = new Variables(
+                hc,
+                new Dictionary<string, GitHub.DistributedTask.WebApi.VariableValue>()
+            );
+
+            Environment.SetEnvironmentVariable("ACTIONS_RUNNER_CONTAINER_HOOKS", null);
 
             _dc = new Mock<IDockerCommandManager>();
             hc.SetSingleton(_dc.Object);
@@ -106,6 +112,48 @@ namespace GitHub.Runner.Common.Tests.Worker
 
                 // Assert.
                 Assert.Equal("node16", nodeVersion);
+            }
+        }
+
+        [Fact]
+        [Trait("Level", "L0")]
+        [Trait("Category", "Worker")]
+        public async Task DetermineNodeRuntimeVersionInContainerHooksAsync()
+        {
+            using (TestHostContext hc = CreateTestContext())
+            {
+                // Arrange.
+                var sh = new ContainerStepHost();
+                sh.Initialize(hc);
+                sh.Container = new ContainerInfo() { ContainerId = "1234abcd", IsAlpine = false };
+                Environment.SetEnvironmentVariable("ACTIONS_RUNNER_CONTAINER_HOOKS", "some path");
+
+                // Act.
+                var nodeVersion = await sh.DetermineNodeRuntimeVersion(_ec.Object, "node16");
+
+                // Assert.
+                Assert.Equal("node16", nodeVersion);
+            }
+        }
+
+        [Fact]
+        [Trait("Level", "L0")]
+        [Trait("Category", "Worker")]
+        public async Task DetermineNodeRuntimeVersionInAlpineContainerHooksAsync()
+        {
+            using (TestHostContext hc = CreateTestContext())
+            {
+                // Arrange.
+                var sh = new ContainerStepHost();
+                sh.Initialize(hc);
+                sh.Container = new ContainerInfo() { ContainerId = "1234abcd", IsAlpine = true };
+                Environment.SetEnvironmentVariable("ACTIONS_RUNNER_CONTAINER_HOOKS", "some path");
+
+                // Act.
+                var nodeVersion = await sh.DetermineNodeRuntimeVersion(_ec.Object, "node16");
+
+                // Assert.
+                Assert.Equal("node16_alpine", nodeVersion);
             }
         }
     }
